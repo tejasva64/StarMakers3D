@@ -1,31 +1,199 @@
-import { useAuth } from "@/_core/hooks/useAuth";
-import { Button } from "@/components/ui/button";
-import { Loader2 } from "lucide-react";
-import { getLoginUrl } from "@/const";
-import { Streamdown } from 'streamdown';
+import { useEffect } from 'react';
+import { motion } from 'framer-motion';
+import { useLocation } from 'wouter';
+import { Button } from '@/components/ui/button';
+import HeroSection from '@/components/HeroSection';
+import { ShoppingCart, Zap, Shield, Truck } from 'lucide-react';
+import ScrollReveal from '@/components/ScrollReveal';
+import CounterAnimation from '@/components/CounterAnimation';
 
-/**
- * All content in this page are only for example, replace with your own feature implementation
- * When building pages, remember your instructions in Frontend Workflow, Frontend Best Practices, Design Guide and Common Pitfalls
- */
 export default function Home() {
-  // The userAuth hooks provides authentication state
-  // To implement login/logout functionality, simply call logout() or redirect to getLoginUrl()
-  let { user, loading, error, isAuthenticated, logout } = useAuth();
+  const [, navigate] = useLocation();
 
-  // If theme is switchable in App.tsx, we can implement theme toggling like this:
-  // const { theme, toggleTheme } = useTheme();
+  useEffect(() => {
+    // Scroll to top on mount
+    window.scrollTo(0, 0);
+  }, []);
 
   return (
-    <div className="min-h-screen flex flex-col">
-      <main>
-        {/* Example: lucide-react for icons */}
-        <Loader2 className="animate-spin" />
-        Example Page
-        {/* Example: Streamdown for markdown rendering */}
-        <Streamdown>Any **markdown** content</Streamdown>
-        <Button variant="default">Example Button</Button>
-      </main>
+    <div className="min-h-screen bg-background">
+      {/* Navigation */}
+      <nav className="fixed top-0 left-0 right-0 z-40 glass-card rounded-none border-b border-white/10 backdrop-blur-xl">
+        <div className="container flex items-center justify-between h-16">
+          <motion.div
+            className="text-2xl font-bold font-syne neon-glow-cyan cursor-pointer"
+            onClick={() => navigate('/')}
+            whileHover={{ scale: 1.05 }}
+          >
+            LUXE
+          </motion.div>
+
+          <div className="flex items-center gap-6">
+            <button
+              onClick={() => navigate('/products')}
+              className="text-foreground/60 hover:text-foreground transition-colors"
+            >
+              Shop
+            </button>
+            <button
+              onClick={() => navigate('/orders')}
+              className="text-foreground/60 hover:text-foreground transition-colors"
+            >
+              Orders
+            </button>
+            <button
+              onClick={() => navigate('/admin')}
+              className="text-foreground/60 hover:text-foreground transition-colors text-sm"
+            >
+              Admin
+            </button>
+            <button
+              onClick={() => navigate('/cart')}
+              className="relative text-foreground/60 hover:text-foreground transition-colors"
+            >
+              <ShoppingCart className="w-5 h-5" />
+            </button>
+          </div>
+        </div>
+      </nav>
+
+      {/* Hero Section */}
+      <div className="pt-16">
+        <HeroSection />
+      </div>
+
+      {/* Features Section */}
+      <section className="py-20 bg-gradient-to-b from-background to-purple-950/10">
+        <div className="container">
+        <ScrollReveal className="mb-12">
+          <motion.h2
+            className="text-4xl font-bold font-syne text-center"
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+            viewport={{ once: true }}
+          >
+            Why Choose <span className="neon-glow-cyan">LUXE</span>
+          </motion.h2>
+        </ScrollReveal>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {[
+              {
+                icon: Zap,
+                title: 'Premium Quality',
+                description: 'Handpicked products meeting the highest standards',
+              },
+              {
+                icon: Truck,
+                title: 'Fast Shipping',
+                description: 'Free shipping on orders over $50',
+              },
+              {
+                icon: Shield,
+                title: 'Secure Checkout',
+                description: 'Your payment information is always protected',
+              },
+              {
+                icon: ShoppingCart,
+                title: 'Easy Returns',
+                description: '30-day return policy on all items',
+              },
+            ].map((feature, index) => (
+            <ScrollReveal key={index} delay={index * 0.1}>
+              <motion.div
+                className="glass-card p-6 text-center"
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6 }}
+                viewport={{ once: true }}
+              >
+                <feature.icon className="w-12 h-12 mx-auto mb-4 text-cyan-400" />
+                <h3 className="font-semibold text-lg mb-2">{feature.title}</h3>
+                <p className="text-foreground/60 text-sm">{feature.description}</p>
+              </motion.div>
+            </ScrollReveal>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* CTA Section */}
+      <section className="py-20">
+        <div className="container">
+          <ScrollReveal>
+            <motion.div
+              className="glass-card p-12 text-center neon-border-cyan"
+              initial={{ opacity: 0, scale: 0.95 }}
+              whileInView={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.6 }}
+              viewport={{ once: true }}
+            >
+              <h2 className="text-4xl font-bold font-syne mb-4">
+                Ready to Experience Luxury?
+              </h2>
+              <p className="text-foreground/60 text-lg mb-8 max-w-2xl mx-auto">
+                Explore our curated collection of premium products and elevate your lifestyle.
+              </p>
+              <Button
+                onClick={() => navigate('/products')}
+                className="magnetic-button bg-cyan-400 hover:bg-cyan-500 text-background font-semibold px-8 h-12"
+              >
+                Start Shopping
+              </Button>
+            </motion.div>
+          </ScrollReveal>
+        </div>
+      </section>
+
+      {/* Footer */}
+      <footer className="border-t border-white/10 py-12 bg-background/50">
+        <div className="container">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
+            <div>
+              <h3 className="font-bold text-lg mb-4 neon-glow-cyan">LUXE</h3>
+              <p className="text-foreground/60 text-sm">
+                Premium collection of luxury products for the discerning customer.
+              </p>
+            </div>
+            <div>
+              <h4 className="font-semibold mb-4">Shop</h4>
+              <ul className="space-y-2 text-foreground/60 text-sm">
+                <li>
+                  <button
+                    onClick={() => navigate('/products')}
+                    className="hover:text-cyan-400 transition-colors"
+                  >
+                    All Products
+                  </button>
+                </li>
+                <li>New Arrivals</li>
+                <li>Best Sellers</li>
+              </ul>
+            </div>
+            <div>
+              <h4 className="font-semibold mb-4">Support</h4>
+              <ul className="space-y-2 text-foreground/60 text-sm">
+                <li>Contact Us</li>
+                <li>Shipping Info</li>
+                <li>Returns</li>
+              </ul>
+            </div>
+            <div>
+              <h4 className="font-semibold mb-4">Legal</h4>
+              <ul className="space-y-2 text-foreground/60 text-sm">
+                <li>Privacy Policy</li>
+                <li>Terms of Service</li>
+                <li>Cookie Policy</li>
+              </ul>
+            </div>
+          </div>
+
+          <div className="border-t border-white/10 pt-8 text-center text-foreground/40 text-sm">
+            <p>&copy; 2026 LUXE Premium Collection. All rights reserved.</p>
+          </div>
+        </div>
+      </footer>
     </div>
   );
 }
