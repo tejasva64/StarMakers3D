@@ -7,11 +7,6 @@ import { ThemeProvider } from "./contexts/ThemeContext";
 import Home from "./pages/Home";
 import Products from "./pages/Products";
 import ProductDetailPage from "./pages/ProductDetail";
-
-// Wrapper component to handle route parameters
-function ProductDetail({ params }: { params: { id: string } }) {
-  return <ProductDetailPage id={params.id} />;
-}
 import Cart from "./pages/Cart";
 import Checkout from "./pages/Checkout";
 import AdminDashboard from "./pages/AdminDashboard";
@@ -19,21 +14,86 @@ import Orders from "./pages/Orders";
 import LoadingScreen from "./components/LoadingScreen";
 import CustomCursor from "./components/CustomCursor";
 import { useEffect, useState } from "react";
+import { AnimatePresence, motion } from "framer-motion";
+
+// Page transition variants
+const pageVariants = {
+  initial: { opacity: 0, y: 20 },
+  animate: { opacity: 1, y: 0, transition: { duration: 0.5 } },
+  exit: { opacity: 0, y: -20, transition: { duration: 0.3 } },
+};
+
+// Wrapper component for page transitions
+function TransitionWrapper({ children }: { children: React.ReactNode }) {
+  return (
+    <motion.div
+      initial="initial"
+      animate="animate"
+      exit="exit"
+      variants={pageVariants}
+    >
+      {children}
+    </motion.div>
+  );
+}
+
+// Wrapper component to handle route parameters
+function ProductDetail({ params }: { params: { id: string } }) {
+  return (
+    <TransitionWrapper>
+      <ProductDetailPage id={params.id} />
+    </TransitionWrapper>
+  );
+}
 
 function Router() {
   return (
-    <Switch>
-      <Route path={"/"} component={Home} />
-      <Route path={"/products"} component={Products} />
-      <Route path={"/product/:id"} component={ProductDetail} />
-      <Route path={"/cart"} component={Cart} />
-      <Route path={"/checkout"} component={Checkout} />
-      <Route path={"/orders"} component={Orders} />
-      <Route path={"/admin"} component={AdminDashboard} />
-      <Route path={"/404"} component={NotFound} />
-      {/* Final fallback route */}
-      <Route component={NotFound} />
-    </Switch>
+    <AnimatePresence mode="wait">
+      <Switch>
+        <Route path={"/"}>
+          <TransitionWrapper>
+            <Home />
+          </TransitionWrapper>
+        </Route>
+        <Route path={"/products"}>
+          <TransitionWrapper>
+            <Products />
+          </TransitionWrapper>
+        </Route>
+        <Route path={"/product/:id"} component={ProductDetail} />
+        <Route path={"/cart"}>
+          <TransitionWrapper>
+            <Cart />
+          </TransitionWrapper>
+        </Route>
+        <Route path={"/checkout"}>
+          <TransitionWrapper>
+            <Checkout />
+          </TransitionWrapper>
+        </Route>
+        <Route path={"/orders"}>
+          <TransitionWrapper>
+            <Orders />
+          </TransitionWrapper>
+        </Route>
+        <Route path={"/admin"}>
+          <TransitionWrapper>
+            <AdminDashboard />
+          </TransitionWrapper>
+        </Route>
+        <Route path={"/404"}>
+          <TransitionWrapper>
+            <NotFound />
+          </TransitionWrapper>
+        </Route>
+        {/* Final fallback route */}
+        <Route>
+          <TransitionWrapper>
+            <NotFound />
+          </TransitionWrapper>
+        </Route>
+      </Switch>
+    </AnimatePresence>
   );
 }
 

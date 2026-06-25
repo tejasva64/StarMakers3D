@@ -11,7 +11,7 @@
 - [x] Set up global CSS variables and Tailwind configuration
 - [x] Build animated loading screen with brand identity
 - [x] Create custom cursor effect component
-- [ ] Set up page transition animations with Framer Motion
+- [x] Set up page transition animations with Framer Motion
 
 ## Phase 3: Customer-Facing Pages
 - [x] Build Hero section with Three.js particle effects
