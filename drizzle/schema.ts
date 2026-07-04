@@ -45,11 +45,26 @@ export type Product = typeof products.$inferSelect;
 export type InsertProduct = typeof products.$inferInsert;
 
 /**
+ * Color parts table - defines color customization parts for products
+ * e.g., Body, Text, Accents, etc.
+ */
+export const colorParts = mysqlTable("colorParts", {
+  id: int("id").autoincrement().primaryKey(),
+  productId: int("productId").notNull(),
+  partName: varchar("partName", { length: 100 }).notNull(), // e.g., "Body", "Text", "Accents"
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type ColorPart = typeof colorParts.$inferSelect;
+export type InsertColorPart = typeof colorParts.$inferInsert;
+
+/**
  * Orders table - stores customer orders
  */
 export const orders = mysqlTable("orders", {
   id: int("id").autoincrement().primaryKey(),
-  userId: int("userId").notNull(),
+  customerName: varchar("customerName", { length: 255 }).notNull(),
+  customerPhone: varchar("customerPhone", { length: 20 }).notNull(),
   status: mysqlEnum("status", ["pending", "completed", "cancelled"]).default("pending").notNull(),
   totalAmount: decimal("totalAmount", { precision: 10, scale: 2 }).notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
@@ -68,6 +83,7 @@ export const orderItems = mysqlTable("orderItems", {
   productId: int("productId").notNull(),
   quantity: int("quantity").notNull(),
   price: decimal("price", { precision: 10, scale: 2 }).notNull(),
+  colorSelections: text("colorSelections"), // JSON: { [partId]: colorValue }
   createdAt: timestamp("createdAt").defaultNow().notNull(),
 });
 
@@ -82,6 +98,7 @@ export const cartItems = mysqlTable("cartItems", {
   userId: int("userId").notNull(),
   productId: int("productId").notNull(),
   quantity: int("quantity").notNull().default(1),
+  colorSelections: text("colorSelections"), // JSON: { [partId]: colorValue }
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
 });
@@ -97,8 +114,7 @@ export const usersRelations = relations(users, ({ many }) => ({
   cartItems: many(cartItems),
 }));
 
-export const ordersRelations = relations(orders, ({ one, many }) => ({
-  user: one(users, { fields: [orders.userId], references: [users.id] }),
+export const ordersRelations = relations(orders, ({ many }) => ({
   items: many(orderItems),
 }));
 
@@ -115,4 +131,9 @@ export const cartItemsRelations = relations(cartItems, ({ one }) => ({
 export const productsRelations = relations(products, ({ many }) => ({
   orderItems: many(orderItems),
   cartItems: many(cartItems),
+  colorParts: many(colorParts),
+}));
+
+export const colorPartsRelations = relations(colorParts, ({ one }) => ({
+  product: one(products, { fields: [colorParts.productId], references: [products.id] }),
 }));

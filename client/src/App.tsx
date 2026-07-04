@@ -11,6 +11,7 @@ import Cart from "./pages/Cart";
 import Checkout from "./pages/Checkout";
 import AdminDashboard from "./pages/AdminDashboard";
 import Orders from "./pages/Orders";
+import OwnerLogin from "./pages/OwnerLogin";
 import LoadingScreen from "./components/LoadingScreen";
 import CustomCursor from "./components/CustomCursor";
 import { useEffect, useState } from "react";
@@ -74,6 +75,11 @@ function Router() {
         <Route path={"/orders"}>
           <TransitionWrapper>
             <Orders />
+          </TransitionWrapper>
+        </Route>
+        <Route path={"/owner-login"}>
+          <TransitionWrapper>
+            <OwnerLogin />
           </TransitionWrapper>
         </Route>
         <Route path={"/admin"}>

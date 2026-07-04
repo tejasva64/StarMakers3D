@@ -21,6 +21,13 @@ export default function AdminDashboard() {
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
 
+  // Check if owner is authenticated
+  const isOwnerAuthenticated = localStorage.getItem('ownerAuthenticated') === 'true';
+  if (!isOwnerAuthenticated) {
+    navigate('/owner-login');
+    return null;
+  }
+
   const { data: user } = trpc.auth.me.useQuery();
   const { data: products = [], refetch: refetchProducts } = trpc.products.list.useQuery();
   const { data: orders = [] } = trpc.orders.getAllOrders.useQuery();

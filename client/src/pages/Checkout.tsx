@@ -1,183 +1,128 @@
 import { useState } from 'react';
-import { motion } from 'framer-motion';
-import { CheckCircle, ArrowRight } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { trpc } from '@/lib/trpc';
 import { useLocation } from 'wouter';
+import { motion } from 'framer-motion';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { trpc } from '@/lib/trpc';
+import { toast } from 'sonner';
+import { ShoppingBag, Phone, User } from 'lucide-react';
 
-interface CheckoutFormData {
-  email: string;
-  firstName: string;
-  lastName: string;
-  address: string;
-  city: string;
-  state: string;
-  zipCode: string;
-  cardNumber: string;
+interface CartItem {
+  id: number;
+  productId: number;
+  productName: string;
+  quantity: number;
+  price: string;
+  imageUrl: string | null;
+  colorSelections?: string;
 }
 
 export default function Checkout() {
   const [, navigate] = useLocation();
-  const [step, setStep] = useState<'form' | 'confirmation'>('form');
-  const [orderId, setOrderId] = useState<number | null>(null);
-  const [formData, setFormData] = useState<CheckoutFormData>({
-    email: '',
-    firstName: '',
-    lastName: '',
-    address: '',
-    city: '',
-    state: '',
-    zipCode: '',
-    cardNumber: '',
-  });
+  const [customerName, setCustomerName] = useState('');
+  const [customerPhone, setCustomerPhone] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
 
   const { data: cartItems = [] } = trpc.cart.list.useQuery();
-  const { data: products = [] } = trpc.products.list.useQuery();
   const createOrderMutation = trpc.orders.create.useMutation();
 
-  // Enrich cart items with product data
-  const enrichedItems = cartItems.map(item => ({
-    ...item,
-    product: products.find(p => p.id === item.productId),
-  }));
+  // Parse cart items
+  const items = cartItems as CartItem[];
+  const total = items.reduce((sum, item) => sum + parseFloat(item.price) * item.quantity, 0);
 
-  // Calculate totals
-  const subtotal = enrichedItems.reduce((sum, item) => {
-    const price = item.product ? parseFloat(item.product.price) : 0;
-    return sum + price * item.quantity;
-  }, 0);
-
-  const tax = subtotal * 0.08;
-  const shipping = subtotal > 50 ? 0 : 10;
-  const total = subtotal + tax + shipping;
-
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmitOrder = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!customerName.trim()) {
+      toast.error('Please enter your name');
+      return;
+    }
+    
+    if (!customerPhone.trim() || customerPhone.length < 10) {
+      toast.error('Please enter a valid phone number');
+      return;
+    }
+
+    if (items.length === 0) {
+      toast.error('Your cart is empty');
+      return;
+    }
+
+    setIsLoading(true);
 
     try {
-      const result = await createOrderMutation.mutateAsync({
-        items: enrichedItems.map(item => ({
+      // Create order with customer info
+      const orderData = {
+        items: items.map(item => ({
           productId: item.productId,
           quantity: item.quantity,
-          price: item.product?.price || '0',
+          price: item.price,
+          colorSelections: item.colorSelections || '',
         })),
         totalAmount: total.toFixed(2),
-      });
+        customerName,
+        customerPhone,
+      };
 
-      setOrderId(result.orderId);
-      setStep('confirmation');
+      // Create order in database
+      const order = await createOrderMutation.mutateAsync(orderData);
+
+      // Generate WhatsApp message
+      const itemsList = items
+        .map(item => {
+          const colors = item.colorSelections ? JSON.parse(item.colorSelections) : {};
+          const colorStr = Object.entries(colors)
+            .map(([part, color]) => `${part}- ${color}`)
+            .join('\n                           ');
+          return `• ${item.productName}${colorStr ? ` (${colorStr})` : ''} x${item.quantity} — ₹${(parseFloat(item.price) * item.quantity).toFixed(2)}`;
+        })
+        .join('\n');
+
+      const message = `Order — StarMakers3D
+
+Name: ${customerName}
+Phone: ${customerPhone}
+
+Items:
+${itemsList}
+
+Total: ₹${total.toFixed(2)}`;
+
+      // Redirect to WhatsApp
+      const encodedMessage = encodeURIComponent(message);
+      const whatsappUrl = `https://wa.me/919833759808?text=${encodedMessage}`;
+      window.open(whatsappUrl, '_blank');
+
+      // Show success message
+      toast.success('Order created! Opening WhatsApp...');
+      
+      // Redirect to confirmation page after a delay
+      setTimeout(() => {
+        navigate('/order-confirmation');
+      }, 1000);
     } catch (error) {
       console.error('Failed to create order:', error);
+      toast.error('Failed to create order. Please try again.');
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  if (step === 'confirmation' && orderId) {
+  if (items.length === 0) {
     return (
       <div className="min-h-screen bg-background py-12">
-        <div className="container max-w-2xl">
+        <div className="container">
           <motion.div
-            className="text-center"
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.6 }}
+            className="text-center py-12"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
           >
-            <motion.div
-              className="mb-6 flex justify-center"
-              animate={{ scale: [1, 1.1, 1] }}
-              transition={{ duration: 0.6, delay: 0.2 }}
-            >
-              <CheckCircle className="w-20 h-20 text-green-400" />
-            </motion.div>
-
-            <h1 className="text-4xl font-bold font-syne mb-4">
-              Order Confirmed!
-            </h1>
-
-            <p className="text-foreground/60 text-lg mb-8">
-              Thank you for your purchase. Your order has been successfully placed.
-            </p>
-
-            {/* Order details */}
-            <motion.div
-              className="glass-card p-8 mb-8 text-left"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.3 }}
-            >
-              <div className="grid grid-cols-2 gap-8 mb-8">
-                <div>
-                  <p className="text-foreground/60 text-sm mb-2">Order Number</p>
-                  <p className="text-2xl font-bold neon-glow-cyan">
-                    #{orderId}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-foreground/60 text-sm mb-2">Total Amount</p>
-                  <p className="text-2xl font-bold neon-glow-gold">
-                    ${total.toFixed(2)}
-                  </p>
-                </div>
-              </div>
-
-              <div className="border-t border-white/10 pt-8">
-                <h3 className="font-semibold mb-4">Order Items</h3>
-                <div className="space-y-3">
-                  {enrichedItems.map(item => (
-                    <div
-                      key={item.id}
-                      className="flex justify-between text-foreground/70"
-                    >
-                      <span>
-                        {item.product?.name} x {item.quantity}
-                      </span>
-                      <span>
-                        ${(
-                          (item.product ? parseFloat(item.product.price) : 0) *
-                          item.quantity
-                        ).toFixed(2)}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </motion.div>
-
-            {/* Next steps */}
-            <motion.div
-              className="glass-card p-6 mb-8"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ duration: 0.6, delay: 0.4 }}
-            >
-              <p className="text-foreground/60 mb-4">
-                A confirmation email has been sent to <strong>{formData.email}</strong>
-              </p>
-              <p className="text-foreground/60">
-                You can track your order status in your account dashboard.
-              </p>
-            </motion.div>
-
-            {/* Action buttons */}
-            <div className="flex gap-4 justify-center">
-              <Button
-                onClick={() => navigate('/products')}
-                className="magnetic-button bg-cyan-400 hover:bg-cyan-500 text-background font-semibold px-8"
-              >
-                Continue Shopping
-              </Button>
-              <Button
-                onClick={() => navigate('/')}
-                variant="outline"
-                className="magnetic-button border-purple-400/50 text-purple-400 hover:bg-purple-400/10 px-8"
-              >
-                Back to Home
-              </Button>
-            </div>
+            <ShoppingBag className="w-16 h-16 mx-auto mb-4 text-foreground/40" />
+            <h1 className="text-3xl font-bold mb-4">Your cart is empty</h1>
+            <p className="text-foreground/60 mb-8">Add some products before checking out</p>
+            <Button onClick={() => navigate('/products')} className="bg-cyan-400 hover:bg-cyan-500">
+              Continue Shopping
+            </Button>
           </motion.div>
         </div>
       </div>
@@ -186,174 +131,130 @@ export default function Checkout() {
 
   return (
     <div className="min-h-screen bg-background py-12">
-      <div className="container max-w-2xl">
+      <div className="container max-w-4xl">
         <motion.h1
-          className="text-4xl font-bold font-syne mb-8"
-          initial={{ opacity: 0, y: 20 }}
+          className="text-4xl font-bold mb-12 font-syne"
+          initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
         >
           Checkout
         </motion.h1>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Checkout form */}
+          {/* Order Summary */}
           <motion.div
-            className="lg:col-span-2"
+            className="lg:col-span-2 glass-card p-8 rounded-2xl"
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.6 }}
+            transition={{ delay: 0.1 }}
           >
-            <form onSubmit={handleSubmit} className="space-y-6">
-              {/* Contact info */}
-              <div className="glass-card p-6">
-                <h2 className="text-lg font-semibold mb-4">Contact Information</h2>
-                <input
-                  type="email"
-                  name="email"
-                  placeholder="Email address"
-                  value={formData.email}
-                  onChange={handleInputChange}
-                  required
-                  className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-foreground placeholder-foreground/40 focus:outline-none focus:border-cyan-400/50 transition-colors mb-4"
-                />
-              </div>
+            <h2 className="text-2xl font-bold mb-6">Order Summary</h2>
+            
+            <div className="space-y-4 mb-6">
+              {items.map((item, index) => {
+                const colors = item.colorSelections ? JSON.parse(item.colorSelections) : {};
+                return (
+                  <motion.div
+                    key={item.id}
+                    className="border border-white/10 rounded-lg p-4"
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: index * 0.05 }}
+                  >
+                    <div className="flex justify-between items-start mb-2">
+                      <div>
+                        <h3 className="font-semibold">{item.productName}</h3>
+                        <p className="text-sm text-foreground/60">Qty: {item.quantity}</p>
+                      </div>
+                      <p className="font-semibold neon-glow-gold">₹{(parseFloat(item.price) * item.quantity).toFixed(2)}</p>
+                    </div>
+                    
+                    {Object.keys(colors).length > 0 && (
+                      <div className="text-xs text-foreground/60 mt-2 space-y-1">
+                        {Object.entries(colors).map(([part, color]) => (
+                          <p key={part}>
+                            <span className="font-medium">{part}:</span> {color as string}
+                          </p>
+                        ))}
+                      </div>
+                    )}
+                  </motion.div>
+                );
+              })}
+            </div>
 
-              {/* Shipping info */}
-              <div className="glass-card p-6">
-                <h2 className="text-lg font-semibold mb-4">Shipping Address</h2>
-                <div className="grid grid-cols-2 gap-4 mb-4">
-                  <input
+            <div className="border-t border-white/10 pt-6">
+              <div className="flex justify-between items-center text-xl font-bold">
+                <span>Total:</span>
+                <span className="neon-glow-gold">₹{total.toFixed(2)}</span>
+              </div>
+            </div>
+          </motion.div>
+
+          {/* Customer Info Form */}
+          <motion.div
+            className="glass-card p-8 rounded-2xl h-fit sticky top-24"
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.2 }}
+          >
+            <h2 className="text-2xl font-bold mb-6">Your Details</h2>
+            
+            <form onSubmit={handleSubmitOrder} className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium mb-2">Full Name *</label>
+                <div className="relative">
+                  <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-foreground/40" />
+                  <Input
                     type="text"
-                    name="firstName"
-                    placeholder="First name"
-                    value={formData.firstName}
-                    onChange={handleInputChange}
+                    value={customerName}
+                    onChange={(e) => setCustomerName(e.target.value)}
+                    placeholder="Your name"
+                    className="pl-10"
                     required
-                    className="px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-foreground placeholder-foreground/40 focus:outline-none focus:border-cyan-400/50 transition-colors"
-                  />
-                  <input
-                    type="text"
-                    name="lastName"
-                    placeholder="Last name"
-                    value={formData.lastName}
-                    onChange={handleInputChange}
-                    required
-                    className="px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-foreground placeholder-foreground/40 focus:outline-none focus:border-cyan-400/50 transition-colors"
-                  />
-                </div>
-                <input
-                  type="text"
-                  name="address"
-                  placeholder="Street address"
-                  value={formData.address}
-                  onChange={handleInputChange}
-                  required
-                  className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-foreground placeholder-foreground/40 focus:outline-none focus:border-cyan-400/50 transition-colors mb-4"
-                />
-                <div className="grid grid-cols-3 gap-4">
-                  <input
-                    type="text"
-                    name="city"
-                    placeholder="City"
-                    value={formData.city}
-                    onChange={handleInputChange}
-                    required
-                    className="px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-foreground placeholder-foreground/40 focus:outline-none focus:border-cyan-400/50 transition-colors"
-                  />
-                  <input
-                    type="text"
-                    name="state"
-                    placeholder="State"
-                    value={formData.state}
-                    onChange={handleInputChange}
-                    required
-                    className="px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-foreground placeholder-foreground/40 focus:outline-none focus:border-cyan-400/50 transition-colors"
-                  />
-                  <input
-                    type="text"
-                    name="zipCode"
-                    placeholder="ZIP code"
-                    value={formData.zipCode}
-                    onChange={handleInputChange}
-                    required
-                    className="px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-foreground placeholder-foreground/40 focus:outline-none focus:border-cyan-400/50 transition-colors"
                   />
                 </div>
               </div>
 
-              {/* Payment info */}
-              <div className="glass-card p-6">
-                <h2 className="text-lg font-semibold mb-4">Payment Method</h2>
-                <input
-                  type="text"
-                  name="cardNumber"
-                  placeholder="Card number"
-                  value={formData.cardNumber}
-                  onChange={handleInputChange}
-                  required
-                  className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-foreground placeholder-foreground/40 focus:outline-none focus:border-cyan-400/50 transition-colors"
-                />
-                <p className="text-xs text-foreground/40 mt-2">
-                  This is a demo. Use any card number for testing.
+              <div>
+                <label className="block text-sm font-medium mb-2">Phone Number *</label>
+                <div className="relative">
+                  <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-foreground/40" />
+                  <Input
+                    type="tel"
+                    value={customerPhone}
+                    onChange={(e) => setCustomerPhone(e.target.value)}
+                    placeholder="10-digit number"
+                    className="pl-10"
+                    required
+                  />
+                </div>
+              </div>
+
+              <div className="bg-blue-400/10 border border-blue-400/20 rounded-lg p-4 text-sm">
+                <p className="text-blue-400 font-medium mb-2">📱 How it works:</p>
+                <p className="text-foreground/80">
+                  After placing your order, you'll be redirected to WhatsApp to confirm your order details with our team.
                 </p>
               </div>
 
               <Button
                 type="submit"
-                disabled={createOrderMutation.isPending}
-                className="w-full magnetic-button bg-cyan-400 hover:bg-cyan-500 text-background font-semibold h-12"
+                disabled={isLoading || !customerName.trim() || !customerPhone.trim()}
+                className="w-full bg-gradient-to-r from-cyan-400 to-purple-400 hover:opacity-90 text-background font-semibold py-3 text-lg"
               >
-                {createOrderMutation.isPending ? 'Processing...' : 'Place Order'}
-                <ArrowRight className="w-4 h-4 ml-2" />
+                {isLoading ? 'Processing...' : 'Place Order on WhatsApp'}
+              </Button>
+
+              <Button
+                type="button"
+                onClick={() => navigate('/cart')}
+                variant="outline"
+                className="w-full"
+              >
+                Back to Cart
               </Button>
             </form>
-          </motion.div>
-
-          {/* Order summary */}
-          <motion.div
-            className="glass-card p-6 h-fit sticky top-4"
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.6 }}
-          >
-            <h2 className="text-lg font-semibold mb-6">Order Summary</h2>
-
-            <div className="space-y-3 mb-6 pb-6 border-b border-white/10">
-              {enrichedItems.map(item => (
-                <div key={item.id} className="flex justify-between text-sm">
-                  <span className="text-foreground/60">
-                    {item.product?.name} x {item.quantity}
-                  </span>
-                  <span>
-                    ${(
-                      (item.product ? parseFloat(item.product.price) : 0) *
-                      item.quantity
-                    ).toFixed(2)}
-                  </span>
-                </div>
-              ))}
-            </div>
-
-            <div className="space-y-2 mb-6 pb-6 border-b border-white/10">
-              <div className="flex justify-between text-foreground/60">
-                <span>Subtotal</span>
-                <span>${subtotal.toFixed(2)}</span>
-              </div>
-              <div className="flex justify-between text-foreground/60">
-                <span>Tax</span>
-                <span>${tax.toFixed(2)}</span>
-              </div>
-              <div className="flex justify-between text-foreground/60">
-                <span>Shipping</span>
-                <span>{shipping === 0 ? 'Free' : `$${shipping.toFixed(2)}`}</span>
-              </div>
-            </div>
-
-            <div className="flex justify-between items-center text-lg font-bold">
-              <span>Total</span>
-              <span className="neon-glow-gold text-2xl">${total.toFixed(2)}</span>
-            </div>
           </motion.div>
         </div>
       </div>

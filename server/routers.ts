@@ -153,13 +153,13 @@ export const appRouter = router({
 
   // Orders router
   orders: router({
-    list: protectedProcedure.query(({ ctx }) => db.getOrdersByUser(ctx.user.id)),
+    list: adminProcedure.query(() => db.getAllOrders()),
     
     getById: protectedProcedure
       .input(z.object({ id: z.number() }))
-      .query(async ({ input, ctx }) => {
+      .query(async ({ input }) => {
         const order = await db.getOrderById(input.id);
-        if (!order || (order.userId !== ctx.user.id && ctx.user.role !== 'admin')) {
+        if (!order) {
           throw new TRPCError({ code: "FORBIDDEN" });
         }
         return order;
@@ -187,7 +187,8 @@ export const appRouter = router({
         }
         
         const orderResult = await db.createOrder({
-          userId: ctx.user.id,
+          customerName: "",
+          customerPhone: "",
           totalAmount: input.totalAmount,
           status: "pending",
         });
@@ -222,7 +223,7 @@ export const appRouter = router({
       .input(z.object({ orderId: z.number() }))
       .query(async ({ input, ctx }) => {
         const order = await db.getOrderById(input.orderId);
-        if (!order || (order.userId !== ctx.user.id && ctx.user.role !== 'admin')) {
+        if (!order) {
           throw new TRPCError({ code: "FORBIDDEN" });
         }
         return db.getOrderItems(input.orderId);

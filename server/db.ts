@@ -166,10 +166,10 @@ export async function createOrder(order: InsertOrder) {
   return db.insert(orders).values(order);
 }
 
-export async function getOrdersByUser(userId: number) {
+export async function getAllOrders() {
   const db = await getDb();
   if (!db) return [];
-  return db.select().from(orders).where(eq(orders.userId, userId)).orderBy(desc(orders.createdAt));
+  return db.select().from(orders).orderBy(desc(orders.createdAt));
 }
 
 export async function getOrderById(id: number) {
@@ -189,10 +189,4 @@ export async function getOrderItems(orderId: number) {
   const db = await getDb();
   if (!db) return [];
   return db.select().from(orderItems).where(eq(orderItems.orderId, orderId));
-}
-
-export async function getAllOrders() {
-  const db = await getDb();
-  if (!db) return [];
-  return db.select().from(orders).orderBy(desc(orders.createdAt));
 }

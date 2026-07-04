@@ -21,11 +21,11 @@ export default function Home() {
       <nav className="fixed top-0 left-0 right-0 z-40 glass-card rounded-none border-b border-white/10 backdrop-blur-xl">
         <div className="container flex items-center justify-between h-16">
           <motion.div
-            className="text-2xl font-bold font-syne neon-glow-cyan cursor-pointer"
+            className="flex items-center gap-2 cursor-pointer"
             onClick={() => navigate('/')}
             whileHover={{ scale: 1.05 }}
           >
-            LUXE
+            <img src="/manus-storage/starmakers3d-logo_2eb28c61.jpg" alt="StarMakers3D" className="h-8 w-auto" />
           </motion.div>
 
           <div className="flex items-center gap-6">
@@ -42,7 +42,7 @@ export default function Home() {
               Orders
             </button>
             <button
-              onClick={() => navigate('/admin')}
+              onClick={() => navigate('/owner-login')}
               className="text-foreground/60 hover:text-foreground transition-colors text-sm"
             >
               Admin
