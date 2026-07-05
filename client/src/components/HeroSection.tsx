@@ -143,9 +143,9 @@ export default function HeroSection() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.1 }}
           >
-            <span className="neon-glow-cyan">LUXE</span>
+            <span className="neon-glow-cyan">StarMakers3D</span>
             <br />
-            <span className="text-foreground">Premium Collection</span>
+            <span className="text-foreground">3D Printing Solutions</span>
           </motion.h1>
 
           <motion.p
@@ -154,7 +154,7 @@ export default function HeroSection() {
             animate={{ opacity: 1 }}
             transition={{ duration: 0.8, delay: 0.2 }}
           >
-            Experience the pinnacle of luxury with our curated collection of premium products. Each item is meticulously selected for quality, design, and innovation.
+            Transform your ideas into reality with our cutting-edge 3D printing solutions. Premium quality, precision craftsmanship, and endless possibilities.
           </motion.p>
 
           <motion.div

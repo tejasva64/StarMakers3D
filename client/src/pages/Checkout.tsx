@@ -9,12 +9,13 @@ import { ShoppingBag, Phone, User } from 'lucide-react';
 
 interface CartItem {
   id: number;
+  userId?: number;
   productId: number;
-  productName: string;
+  productName?: string;
   quantity: number;
-  price: string;
-  imageUrl: string | null;
-  colorSelections?: string;
+  price?: string;
+  imageUrl?: string | null;
+  colorSelections?: string | null;
 }
 
 export default function Checkout() {
@@ -26,9 +27,9 @@ export default function Checkout() {
   const { data: cartItems = [] } = trpc.cart.list.useQuery();
   const createOrderMutation = trpc.orders.create.useMutation();
 
-  // Parse cart items
-  const items = cartItems as CartItem[];
-  const total = items.reduce((sum, item) => sum + parseFloat(item.price) * item.quantity, 0);
+  // Parse cart items - need to fetch product details for display
+  const items = (cartItems as unknown) as CartItem[];
+  const total = items.reduce((sum, item) => sum + (parseFloat(item.price || '0') * item.quantity), 0);
 
   const handleSubmitOrder = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -56,7 +57,7 @@ export default function Checkout() {
         items: items.map(item => ({
           productId: item.productId,
           quantity: item.quantity,
-          price: item.price,
+          price: item.price || '0',
           colorSelections: item.colorSelections || '',
         })),
         totalAmount: total.toFixed(2),
@@ -74,7 +75,8 @@ export default function Checkout() {
           const colorStr = Object.entries(colors)
             .map(([part, color]) => `${part}- ${color}`)
             .join('\n                           ');
-          return `• ${item.productName}${colorStr ? ` (${colorStr})` : ''} x${item.quantity} — ₹${(parseFloat(item.price) * item.quantity).toFixed(2)}`;
+          const itemPrice = item.price ? parseFloat(item.price) : 0;
+          return `• ${item.productName}${colorStr ? ` (${colorStr})` : ''} x${item.quantity} — ₹${(itemPrice * item.quantity).toFixed(2)}`;
         })
         .join('\n');
 
@@ -166,7 +168,7 @@ Total: ₹${total.toFixed(2)}`;
                         <h3 className="font-semibold">{item.productName}</h3>
                         <p className="text-sm text-foreground/60">Qty: {item.quantity}</p>
                       </div>
-                      <p className="font-semibold neon-glow-gold">₹{(parseFloat(item.price) * item.quantity).toFixed(2)}</p>
+                      <p className="font-semibold neon-glow-gold">₹{((item.price ? parseFloat(item.price) : 0) * item.quantity).toFixed(2)}</p>
                     </div>
                     
                     {Object.keys(colors).length > 0 && (

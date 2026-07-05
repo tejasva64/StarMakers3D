@@ -73,7 +73,7 @@ export default function Home() {
             transition={{ duration: 0.6 }}
             viewport={{ once: true }}
           >
-            Why Choose <span className="neon-glow-cyan">LUXE</span>
+            Why Choose <span className="neon-glow-cyan">StarMakers3D</span>
           </motion.h2>
         </ScrollReveal>
 
@@ -130,10 +130,10 @@ export default function Home() {
               viewport={{ once: true }}
             >
               <h2 className="text-4xl font-bold font-syne mb-4">
-                Ready to Experience Luxury?
+                Ready to Create with StarMakers3D?
               </h2>
               <p className="text-foreground/60 text-lg mb-8 max-w-2xl mx-auto">
-                Explore our curated collection of premium products and elevate your lifestyle.
+                Explore our 3D printing solutions and bring your ideas to life.
               </p>
               <Button
                 onClick={() => navigate('/products')}
@@ -151,9 +151,9 @@ export default function Home() {
         <div className="container">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
             <div>
-              <h3 className="font-bold text-lg mb-4 neon-glow-cyan">LUXE</h3>
+              <h3 className="font-bold text-lg mb-4 neon-glow-cyan">StarMakers3D</h3>
               <p className="text-foreground/60 text-sm">
-                Premium collection of luxury products for the discerning customer.
+                Cutting-edge 3D printing solutions for creators and innovators.
               </p>
             </div>
             <div>
@@ -190,7 +190,7 @@ export default function Home() {
           </div>
 
           <div className="border-t border-white/10 pt-8 text-center text-foreground/40 text-sm">
-            <p>&copy; 2026 LUXE Premium Collection. All rights reserved.</p>
+            <p>&copy; 2026 StarMakers3D. 3D Printing Solutions. All rights reserved.</p>
           </div>
         </div>
       </footer>

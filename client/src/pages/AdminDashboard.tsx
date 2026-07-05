@@ -30,7 +30,7 @@ export default function AdminDashboard() {
 
   const { data: user } = trpc.auth.me.useQuery();
   const { data: products = [], refetch: refetchProducts } = trpc.products.list.useQuery();
-  const { data: orders = [] } = trpc.orders.getAllOrders.useQuery();
+  const { data: orders = [] } = trpc.orders.list.useQuery();
   const deleteProductMutation = trpc.products.delete.useMutation();
 
   // Check if user is admin
@@ -69,7 +69,7 @@ export default function AdminDashboard() {
   };
 
   // Calculate statistics
-  const totalRevenue = orders.reduce((sum, order) => sum + parseFloat(order.totalAmount), 0);
+  const totalRevenue = orders.reduce((sum: number, order: any) => sum + parseFloat(order.totalAmount), 0);
   const totalOrders = orders.length;
   const totalProducts = products.length;
 

@@ -171,8 +171,11 @@ export const appRouter = router({
           productId: z.number(),
           quantity: z.number().int().min(1),
           price: z.string(),
+          colorSelections: z.string().optional(),
         })).min(1),
         totalAmount: z.string(),
+        customerName: z.string().min(1),
+        customerPhone: z.string().min(10),
       }))
       .mutation(async ({ input, ctx }) => {
         // Validate all products exist and have sufficient stock
@@ -187,8 +190,8 @@ export const appRouter = router({
         }
         
         const orderResult = await db.createOrder({
-          customerName: "",
-          customerPhone: "",
+          customerName: input.customerName,
+          customerPhone: input.customerPhone,
           totalAmount: input.totalAmount,
           status: "pending",
         });
@@ -207,6 +210,7 @@ export const appRouter = router({
             productId: item.productId,
             quantity: item.quantity,
             price: item.price,
+            colorSelections: item.colorSelections || null,
           });
         }
         
@@ -215,9 +219,6 @@ export const appRouter = router({
         
         return { orderId };
       }),
-    
-    // Admin: get all orders
-    getAllOrders: adminProcedure.query(() => db.getAllOrders()),
     
     getItems: protectedProcedure
       .input(z.object({ orderId: z.number() }))
