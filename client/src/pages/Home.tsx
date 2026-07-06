@@ -87,17 +87,12 @@ export default function Home() {
               {
                 icon: Truck,
                 title: 'Fast Shipping',
-                description: 'Free shipping on orders over $50',
+                description: 'Fast 3-day shipping policy',
               },
               {
                 icon: Shield,
                 title: 'Secure Checkout',
                 description: 'Your payment information is always protected',
-              },
-              {
-                icon: ShoppingCart,
-                title: 'Easy Returns',
-                description: '30-day return policy on all items',
               },
             ].map((feature, index) => (
             <ScrollReveal key={index} delay={index * 0.1}>
