@@ -25,7 +25,7 @@ export default function Home() {
             onClick={() => navigate('/')}
             whileHover={{ scale: 1.05 }}
           >
-            <img src="/manus-storage/starmakers3d-logo_2eb28c61.jpg" alt="StarMakers3D" className="h-8 w-auto" />
+            <span className="text-xl font-bold neon-glow-cyan">StarMakers3D</span>
           </motion.div>
 
           <div className="flex items-center gap-6">

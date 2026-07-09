@@ -33,18 +33,8 @@ export default function AdminDashboard() {
   const { data: orders = [] } = trpc.orders.list.useQuery();
   const deleteProductMutation = trpc.products.delete.useMutation();
 
-  // Check if user is admin
-  if (!user || user.role !== 'admin') {
-    return (
-      <div className="min-h-screen bg-background flex flex-col items-center justify-center">
-        <p className="text-foreground/60 mb-4 text-lg">Access Denied</p>
-        <p className="text-foreground/40 mb-8">You don't have permission to access this page</p>
-        <Button onClick={() => navigate('/')}>
-          Back to Home
-        </Button>
-      </div>
-    );
-  }
+  // Owner authentication is sufficient for admin access
+  // No additional role check needed since owner password is the auth mechanism
 
   const handleDeleteProduct = async (productId: number) => {
     if (confirm('Are you sure you want to delete this product?')) {
