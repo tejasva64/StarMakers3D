@@ -144,7 +144,7 @@ export default function HeroSection() {
   transition={{ duration: 0.8, delay: 0.1 }}
 >
   <span className="neon-glow-cyan block mb-3">StarMakers3D</span>
-  <span className="text-foreground block leading-relaxed pb-6 overflow-visible">3D Printing Solutions</span>
+  <span className="text-foreground block leading-loose py-2 pb-6 overflow-visible">3D Printing Solutions</span>
 </motion.h1>
           <motion.p
             className="text-1xl text-foreground/70 mb-8 max-w-2xl mx-auto"
