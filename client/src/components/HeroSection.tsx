@@ -138,7 +138,7 @@ export default function HeroSection() {
           className="text-center"
         >
           <motion.h1
-            className="text-4xl md:text-5xl font-bold font-syne leading-relaxed mb-6 pt-8 pb-2"
+            className="text-5xl md:text-6xl font-bold font-syne leading-relaxed mb-6 pt-8 pb-2"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.1 }}
