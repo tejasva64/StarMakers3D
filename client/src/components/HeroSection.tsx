@@ -138,13 +138,14 @@ export default function HeroSection() {
           className="text-center"
         >
          <motion.h1
-  className="text-5xl md:text-7xl font-bold font-syne text-center h-auto block overflow-visible pt-14"
+  className="text-5xl md:text-7xl font-bold font-syne text-center h-auto block overflow-visible pt-14 leading-none track-tight"
   initial={{ opacity: 0, y: 20 }}
   animate={{ opacity: 1, y: 0 }}
   transition={{ duration: 0.8, delay: 0.1 }}
 >
-  <span className="neon-glow-cyan block mb-3">StarMakers3D</span>
-  <span className="text-foreground block leading-loose py-2 pb-6 overflow-visible">3D Printing Solutions</span>
+  <span className="neon-glow-cyan block mb-1">StarMakers3D</span>
+  <span className="text-foreground block md:inline-block pb-5 md:pb-0 overflow-visible mt-0">3D Printing </span>
+  <span className="text-foreground block md:inline-block overflow-visible mt-0">Solutions</span>
 </motion.h1>
           <motion.p
             className="text-1xl text-foreground/70 mb-8 max-w-2xl mx-auto"
