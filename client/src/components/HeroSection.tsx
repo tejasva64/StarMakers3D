@@ -119,7 +119,7 @@ export default function HeroSection() {
   }, []);
 
   return (
-    <section className="relative w-full min-h-[70vh] overflow-hidden bg-background">
+    <section className="relative w-full min-h-[70vh] overflow-hidden bg-background pt-24 md:pt-28">
       {/* Particle background */}
       <canvas
         ref={canvasRef}
@@ -130,12 +130,12 @@ export default function HeroSection() {
       <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-background/50" />
 
       {/* Content */}
-      <div className="relative z-10 h-full flex flex-col items-center justify-center px-4 overflow-visible pt-16">
+      <div className="relative z-10 h-full flex flex-col items-center justify-center px-4">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8 }}
-          className="text-center overflow-visible py-4"
+          className="text-center"
         >
           <motion.h1
             className="text-4xl md:text-5xl font-bold font-syne leading-relaxed mb-6 pt-8 pb-2"
