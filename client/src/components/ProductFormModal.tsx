@@ -39,7 +39,7 @@ export default function ProductFormModal({
     name: '',
     description: '',
     price: '',
-    category: 'Electronics',
+    category: 'Keychains',
     imageUrl: '',
     stock: 0,
   });
