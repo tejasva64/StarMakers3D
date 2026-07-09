@@ -91,7 +91,7 @@ export default function AdminDashboard() {
             {
               icon: TrendingUp,
               label: 'Total Revenue',
-              value: `$${totalRevenue.toFixed(2)}`,
+              value: `₹${totalRevenue.toFixed(2)}`,
               color: 'text-cyan-400',
             },
             {
