@@ -200,7 +200,7 @@ export default function ProductFormModal({
                       onChange={handleInputChange}
                       className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-foreground focus:outline-none focus:border-cyan-400/50 transition-colors"
                     >
-                      <option value="Keychains">Keychains/option>
+                      <option value="Keychains">Keychains</option>
                       <option value="Pen Stands">Pen Stands</option>
                       <option value="Fidget Toys">Fidget Toys</option>
                       <option value="Custom Print">Custom Print</option>
