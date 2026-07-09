@@ -25,7 +25,7 @@ export default function Home() {
             onClick={() => navigate('/')}
             whileHover={{ scale: 1.05 }}
           >
-            <span className="text-xl font-bold neon-glow-cyan">StarMakers3D</span>
+            <span className="text-base font-bold neon-glow-cyan mr-3 tracking-tight">StarMakers3D</span>
           </motion.div>
 
           <div className="flex items-center gap-6">
