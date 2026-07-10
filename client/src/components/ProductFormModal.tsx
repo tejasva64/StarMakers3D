@@ -116,13 +116,18 @@ export default function ProductFormModal({
     setSelectedPartIndex(null);
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+ const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     try {
+      // This sends only the exact data fields the backend is expecting
       const productData = {
-        ...formData,
-        colorParts: JSON.stringify(colorParts),
+        name: formData.name,
+        description: formData.description || undefined,
+        price: formData.price.toString(),
+        category: formData.category,
+        imageUrl: formData.imageUrl || undefined,
+        stock: Number(formData.stock),
       };
 
       if (editingProduct) {
