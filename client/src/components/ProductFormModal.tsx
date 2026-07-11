@@ -67,12 +67,13 @@ export default function ProductFormModal({
         name: '',
         description: '',
         price: '',
-        category: 'Electronics',
+        category: 'Keychains', // Fixed: changed from Electronics to match select options
         imageUrl: '',
         stock: 0,
       });
       setColorParts([]);
     }
+    setSelectedPartIndex(null);
   }, [editingProduct, isOpen]);
 
   const handleInputChange = (
@@ -81,7 +82,7 @@ export default function ProductFormModal({
     const { name, value } = e.target;
     setFormData(prev => ({
       ...prev,
-      [name]: name === 'stock' ? parseInt(value) : value,
+      [name]: name === 'stock' ? parseInt(value) || 0 : value,
     }));
   };
 
@@ -90,25 +91,34 @@ export default function ProductFormModal({
       toast.error('Part name is required');
       return;
     }
-    setColorParts([...colorParts, { partName: newPartName, colors: [] }]);
+    setColorParts([...colorParts, { partName: newPartName.trim(), colors: [] }]);
     setNewPartName('');
   };
 
-  const handleAddColorTopart = (partIndex: number) => {
+  const handleAddColorToPart = (partIndex: number) => {
     if (!newColor.trim()) {
       toast.error('Color is required');
       return;
     }
-    const updatedParts = [...colorParts];
-    updatedParts[partIndex].colors.push(newColor);
-    setColorParts(updatedParts);
+    // Fixed: Immutable state update avoiding shallow copy mutations
+    setColorParts(prevParts =>
+      prevParts.map((part, idx) =>
+        idx === partIndex
+          ? { ...part, colors: [...part.colors, newColor.trim()] }
+          : part
+      )
+    );
     setNewColor('');
   };
 
   const handleRemoveColor = (partIndex: number, colorIndex: number) => {
-    const updatedParts = [...colorParts];
-    updatedParts[partIndex].colors.splice(colorIndex, 1);
-    setColorParts(updatedParts);
+    setColorParts(prevParts =>
+      prevParts.map((part, idx) =>
+        idx === partIndex
+          ? { ...part, colors: part.colors.filter((_, cIdx) => cIdx !== colorIndex) }
+          : part
+      )
+    );
   };
 
   const handleRemoveColorPart = (partIndex: number) => {
@@ -116,11 +126,11 @@ export default function ProductFormModal({
     setSelectedPartIndex(null);
   };
 
- const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     try {
-      // This sends only the exact data fields the backend is expecting
+      // Fixed: Included colorParts in payload mapped cleanly to backend requirements
       const productData = {
         name: formData.name,
         description: formData.description || undefined,
@@ -128,6 +138,11 @@ export default function ProductFormModal({
         category: formData.category,
         imageUrl: formData.imageUrl || undefined,
         stock: Number(formData.stock),
+        colorParts: colorParts.map(part => ({
+          id: part.id,
+          partName: part.partName,
+          colors: part.colors,
+        })),
       };
 
       if (editingProduct) {
@@ -135,8 +150,10 @@ export default function ProductFormModal({
           id: editingProduct.id,
           ...productData,
         });
+        toast.success('Product updated successfully');
       } else {
         await createProductMutation.mutateAsync(productData);
+        toast.success('Product created successfully');
       }
 
       onSuccess();
@@ -168,13 +185,14 @@ export default function ProductFormModal({
             exit={{ opacity: 0, scale: 0.95 }}
             transition={{ duration: 0.3 }}
           >
-            <div className="glass-card w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+            <div className="glass-card w-full max-w-2xl max-h-[90vh] overflow-y-auto bg-background border border-white/10 rounded-xl shadow-xl">
               {/* Header */}
-              <div className="flex items-center justify-between p-6 border-b border-white/10 sticky top-0 bg-background/50 backdrop-blur">
+              <div className="flex items-center justify-between p-6 border-b border-white/10 sticky top-0 bg-background/80 backdrop-blur z-10">
                 <h2 className="text-2xl font-bold">
                   {editingProduct ? 'Edit Product' : 'Add New Product'}
                 </h2>
                 <button
+                  type="button"
                   onClick={onClose}
                   className="p-2 hover:bg-white/10 rounded transition-colors"
                 >
@@ -205,11 +223,11 @@ export default function ProductFormModal({
                       onChange={handleInputChange}
                       className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-foreground focus:outline-none focus:border-cyan-400/50 transition-colors"
                     >
-                      <option value="Keychains">Keychains</option>
-                      <option value="Pen Stands">Pen Stands</option>
-                      <option value="Fidget Toys">Fidget Toys</option>
-                      <option value="Custom Print">Custom Print</option>
-                      <option value="Mini Pen Holders">Mini Pen Holders</option>
+                      <option value="Keychains" className="bg-neutral-900">Keychains</option>
+                      <option value="Pen Stands" className="bg-neutral-900">Pen Stands</option>
+                      <option value="Fidget Toys" className="bg-neutral-900">Fidget Toys</option>
+                      <option value="Custom Print" className="bg-neutral-900">Custom Print</option>
+                      <option value="Mini Pen Holders" className="bg-neutral-900">Mini Pen Holders</option>
                     </select>
                   </div>
                 </div>
@@ -234,6 +252,7 @@ export default function ProductFormModal({
                       value={formData.price}
                       onChange={handleInputChange}
                       step="0.01"
+                      min="0"
                       required
                       className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-foreground placeholder-foreground/40 focus:outline-none focus:border-cyan-400/50 transition-colors"
                     />
@@ -246,6 +265,7 @@ export default function ProductFormModal({
                       name="stock"
                       value={formData.stock}
                       onChange={handleInputChange}
+                      min="0"
                       required
                       className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-foreground placeholder-foreground/40 focus:outline-none focus:border-cyan-400/50 transition-colors"
                     />
@@ -268,8 +288,9 @@ export default function ProductFormModal({
                 <div className="border-t border-white/10 pt-4 mt-4">
                   <h3 className="text-sm font-semibold mb-3">Color Parts</h3>
                   <p className="text-xs text-foreground/60 mb-3">Define color options for different parts (e.g., Body, Text, Accents)</p>
+                  
                   <div className="space-y-3">
-                    {/* Add new color part */}
+                    {/* Add new color part input setup */}
                     <div className="flex gap-2">
                       <input
                         type="text"
@@ -308,7 +329,7 @@ export default function ProductFormModal({
                             </button>
                           </div>
 
-                          {/* Colors for this part */}
+                          {/* Colors wrapper inside part */}
                           <div className="flex flex-wrap gap-1">
                             {part.colors.map((color, colorIndex) => (
                               <motion.div
@@ -333,7 +354,7 @@ export default function ProductFormModal({
                             ))}
                           </div>
 
-                          {/* Add color to this part */}
+                          {/* Dynamic Color Selector Block */}
                           {selectedPartIndex === partIndex && (
                             <motion.div
                               initial={{ opacity: 0, height: 0 }}
@@ -343,20 +364,20 @@ export default function ProductFormModal({
                             >
                               <input
                                 type="color"
-                                value={newColor}
+                                value={newColor || '#000000'}
                                 onChange={(e) => setNewColor(e.target.value)}
-                                className="w-10 h-8 p-1 cursor-pointer rounded"
+                                className="w-10 h-8 p-1 cursor-pointer rounded bg-transparent border-0"
                               />
                               <input
                                 type="text"
                                 value={newColor}
                                 onChange={(e) => setNewColor(e.target.value)}
                                 placeholder="#000000"
-                                className="flex-1 px-2 py-1 bg-white/5 border border-white/10 rounded text-xs"
+                                className="flex-1 px-2 py-1 bg-white/5 border border-white/10 rounded text-xs text-foreground"
                               />
                               <Button
                                 type="button"
-                                onClick={() => handleAddColorTopart(partIndex)}
+                                onClick={() => handleAddColorToPart(partIndex)}
                                 className="bg-purple-400 hover:bg-purple-500 text-background px-2 h-8 text-xs"
                               >
                                 Add
@@ -367,9 +388,12 @@ export default function ProductFormModal({
                           {selectedPartIndex !== partIndex && (
                             <Button
                               type="button"
-                              onClick={() => setSelectedPartIndex(partIndex)}
+                              onClick={() => {
+                                setSelectedPartIndex(partIndex);
+                                setNewColor('#000000');
+                              }}
                               variant="outline"
-                              className="w-full text-xs h-7"
+                              className="w-full text-xs h-7 border-white/10 hover:bg-white/5"
                             >
                               <Plus className="w-3 h-3 mr-1" />
                               Add Color
@@ -381,14 +405,18 @@ export default function ProductFormModal({
                   </div>
                 </div>
 
-                {/* Actions */}
+                {/* Form Actions Footer */}
                 <div className="flex gap-4 pt-4 border-t border-white/10 mt-4">
                   <Button
                     type="submit"
                     disabled={createProductMutation.isPending || updateProductMutation.isPending}
-                    className="flex-1 magnetic-button bg-cyan-400 hover:bg-cyan-500 text-background font-semibold"
+                    className="flex-1 bg-cyan-400 hover:bg-cyan-500 text-background font-semibold"
                   >
-                    {editingProduct ? 'Update Product' : 'Create Product'}
+                    {createProductMutation.isPending || updateProductMutation.isPending
+                      ? 'Saving...'
+                      : editingProduct
+                      ? 'Update Product'
+                      : 'Create Product'}
                   </Button>
                   <Button
                     type="button"
