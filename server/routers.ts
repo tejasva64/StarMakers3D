@@ -36,16 +36,23 @@ export const appRouter = router({
       .input(z.object({ category: z.string() }))
       .query(({ input }) => db.getProductsByCategory(input.category)),
     
-    create: adminProcedure
+    // CHANGED: adminProcedure -> publicProcedure with password check
+    create: publicProcedure
       .input(z.object({
+        adminPassword: z.string(), // Captures the password from the frontend
         name: z.string(),
         description: z.string().optional(),
         price: z.string(),
         category: z.string(),
         imageUrl: z.string().optional(),
         stock: z.number().default(0),
+        colorParts: z.any().optional(), // Safely ignores colorParts for now if DB doesn't use them
       }))
       .mutation(async ({ input }) => {
+        if (input.adminPassword !== "StarMakers3D") {
+          throw new TRPCError({ code: "UNAUTHORIZED", message: "Invalid Owner Password" });
+        }
+        
         return db.createProduct({
           name: input.name,
           description: input.description,
@@ -56,24 +63,40 @@ export const appRouter = router({
         });
       }),
     
-    update: adminProcedure
+    // CHANGED: adminProcedure -> publicProcedure with password check
+    update: publicProcedure
       .input(z.object({
         id: z.number(),
+        adminPassword: z.string(), // Captures the password from the frontend
         name: z.string().optional(),
         description: z.string().optional(),
         price: z.string().optional(),
         category: z.string().optional(),
         imageUrl: z.string().optional(),
         stock: z.number().optional(),
+        colorParts: z.any().optional(),
       }))
       .mutation(async ({ input }) => {
-        const { id, ...updates } = input;
+        if (input.adminPassword !== "StarMakers3D") {
+          throw new TRPCError({ code: "UNAUTHORIZED", message: "Invalid Owner Password" });
+        }
+
+        // Destructure to remove the password before passing to the DB
+        const { id, adminPassword, colorParts, ...updates } = input;
         return db.updateProduct(id, updates);
       }),
     
-    delete: adminProcedure
-      .input(z.object({ id: z.number() }))
+    // CHANGED: adminProcedure -> publicProcedure with password check
+    delete: publicProcedure
+      .input(z.object({ 
+        id: z.number(),
+        adminPassword: z.string(), // Captures the password from the frontend
+      }))
       .mutation(async ({ input }) => {
+        if (input.adminPassword !== "StarMakers3D") {
+          throw new TRPCError({ code: "UNAUTHORIZED", message: "Invalid Owner Password" });
+        }
+        
         return db.deleteProduct(input.id);
       }),
   }),
