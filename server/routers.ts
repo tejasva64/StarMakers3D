@@ -1,4 +1,5 @@
 import { COOKIE_NAME } from "@shared/const";
+import type { TRPCError as TRPCErrorType } from "@trpc/server";
 import { getSessionCookieOptions } from "./_core/cookies";
 import { systemRouter } from "./_core/systemRouter";
 import { publicProcedure, router, protectedProcedure, adminProcedure } from "./_core/trpc";
@@ -38,19 +39,18 @@ export const appRouter = router({
     
     create: publicProcedure
       .input(z.object({
-        ownerPassword: z.string(),
         name: z.string(),
         description: z.string().optional(),
         price: z.string(),
         category: z.string(),
         imageUrl: z.string().optional(),
         stock: z.number().default(0),
+        ownerPassword: z.string(),
       }))
       .mutation(async ({ input }) => {
-        if (input.ownerPassword !== "StarMakers3D") {
-          throw new TRPCError({ code: "UNAUTHORIZED", message: "Invalid Owner Password" });
+        if (input.ownerPassword !== 'StarMakers3D') {
+          throw new TRPCError({ code: 'FORBIDDEN', message: 'Invalid owner password' });
         }
-        
         return db.createProduct({
           name: input.name,
           description: input.description,
@@ -64,33 +64,28 @@ export const appRouter = router({
     update: publicProcedure
       .input(z.object({
         id: z.number(),
-        ownerPassword: z.string(),
         name: z.string().optional(),
         description: z.string().optional(),
         price: z.string().optional(),
         category: z.string().optional(),
         imageUrl: z.string().optional(),
         stock: z.number().optional(),
+        ownerPassword: z.string(),
       }))
       .mutation(async ({ input }) => {
-        if (input.ownerPassword !== "StarMakers3D") {
-          throw new TRPCError({ code: "UNAUTHORIZED", message: "Invalid Owner Password" });
+        if (input.ownerPassword !== 'StarMakers3D') {
+          throw new TRPCError({ code: 'FORBIDDEN', message: 'Invalid owner password' });
         }
-
         const { id, ownerPassword, ...updates } = input;
         return db.updateProduct(id, updates);
       }),
     
     delete: publicProcedure
-      .input(z.object({ 
-        id: z.number(),
-        ownerPassword: z.string().optional(),
-      }))
+      .input(z.object({ id: z.number(), ownerPassword: z.string() }))
       .mutation(async ({ input }) => {
-        if (input.ownerPassword && input.ownerPassword !== "StarMakers3D") {
-          throw new TRPCError({ code: "UNAUTHORIZED", message: "Invalid Owner Password" });
+        if (input.ownerPassword !== 'StarMakers3D') {
+          throw new TRPCError({ code: 'FORBIDDEN', message: 'Invalid owner password' });
         }
-        
         return db.deleteProduct(input.id);
       }),
   }),
@@ -248,5 +243,4 @@ export const appRouter = router({
       }),
   }),
 });
-
 export type AppRouter = typeof appRouter;
