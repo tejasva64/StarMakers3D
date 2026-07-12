@@ -159,9 +159,9 @@ export default function ProductFormModal({
 
       onSuccess();
       onClose();
-    } catch (error) {
-      console.error('Failed to save product:', error);
-      toast.error('Failed to save product. Unauthorized or invalid data.');
+    } catch (error: any) {
+      console.error('Full error object:', error);
+      toast.error(`Error: ${error?.message || 'Unknown server error'}`);
     }
   };
 
